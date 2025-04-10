@@ -28,9 +28,9 @@ export function functionHandler(
 
     const startTimestamp = new Date();
 
-    const supabaseUrl = Deno.env.get("MY_SUPABASE_URL") ||
+    const supabaseUrl = Deno.env.get("_SUPABASE_URL") ||
       Deno.env.get("SUPABASE_URL");
-    const supabaseKey = Deno.env.get("MY_SUPABASE_SERVICE_ROLE_KEY") ||
+    const supabaseKey = Deno.env.get("_SUPABASE_ANON_KEY") ||
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!supabaseUrl || !supabaseKey) {
