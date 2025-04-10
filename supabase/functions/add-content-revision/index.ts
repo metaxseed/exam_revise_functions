@@ -12,7 +12,7 @@ Deno.serve(functionHandler(async (req, supabase) => {
   .insert({
     category_id: content_data.category_id,
     topic_h3_id: content_data.topic_h3_id,
-    revision_notes: content_data.content,
+    revision_notes: content_data.revision_notes,
     revision_tips: content_data.revisionTips,
     revision_examples: content_data.revisionExamples,
     video_link: content_data.videoLink,
