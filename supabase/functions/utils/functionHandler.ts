@@ -1,7 +1,7 @@
 import { createClient, SupabaseClient } from "jsr:@supabase/supabase-js";
 import { getSecondsBetweenDates } from "./helper.ts";
 import { JWTPayload, verifyJWT } from "./auth.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { corsHeaders } from "../shared/cors.ts";
 
 export interface CustomResponse {
   exec_time_in_seconds: number;
@@ -10,7 +10,7 @@ export interface CustomResponse {
   data: any;
 }
 
-export function functionWrapper(
+export function functionHandler(
   handler: (
     req: Request,
     supabase: SupabaseClient,
