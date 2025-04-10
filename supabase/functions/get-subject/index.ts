@@ -33,9 +33,23 @@ Deno.serve(functionHandler(async (req, supabase) => {
 
         if (topic_h3_error) throw topic_h3_error;
 
+        // Get revision notes for each topic_h3
+        const topicsH3WithRevisions = await Promise.all(topic_h3.map(async (h3) => {
+          const { data: revisions, error: revisions_error } = await supabase.from("content_revision")
+            .select("revision_id")
+            .eq("topic_h3_id", h3.topic_h3_id);
+
+          if (revisions_error) throw revisions_error;
+
+          return {
+            ...h3,
+            revision_ids: revisions
+          };
+        }));
+
         return {
           ...h2,
-          topics_h3: topic_h3
+          topics_h3: topicsH3WithRevisions
         };
       }));
 
