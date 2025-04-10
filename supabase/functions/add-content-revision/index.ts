@@ -10,8 +10,8 @@ Deno.serve(functionHandler(async (req, supabase) => {
 
   const { data, error } = await supabase.from("content_revision")
   .insert({
-    category_id: 1,
-    topic_h3_id: 1,
+    category_id: content_data.category_id,
+    topic_h3_id: content_data.topic_h3_id,
     revision_notes: content_data.content,
     revision_tips: content_data.revisionTips,
     revision_examples: content_data.revisionExamples,
