@@ -5,31 +5,35 @@ Deno.serve(functionHandler(async (req, supabase) => {
   if (req.method !== "POST") throw new Error("Method Not Allowed");
 
   const { payload } = await req.json();
+  const { type, ...data } = payload;
 
-  switch (payload.type) {
+  switch (type) {
     case "topic_h1":
-      return await addTopicH1(supabase, payload);
+      return await addTopicH1(supabase, data);
     case "topic_h2":
-      return await addTopicH2(supabase, payload);
+      return await addTopicH2(supabase, data);
     case "topic_h3":
-      return await addTopicH3(supabase, payload);
+      return await addTopicH3(supabase, data);
     default:
       throw new Error("Invalid topic type");
   }
 }, false));
 
-const addTopicH1 = async (supabase: SupabaseClient, payload: any) => {
+const addTopicH1 = async (supabase: SupabaseClient, data: any) => {
   // Add additional fields to the payload
-  payload.meta_data = null; // Include meta_data as an empty object
-  payload.created_at = new Date(); // Set created_at to the current date
-  payload.updated_at = new Date(); // Set updated_at to the current date
+  const payload = {
+    ...data,
+    meta_data: null,
+    created_at: new Date(),
+    updated_at: new Date()
+  }
 
   // Validate if the combination of subject_id and topic_parent_name already exists
   const { data: existingTopics, error: existingTopicError } = await supabase
     .from("topic_h1")
     .select("*")
-    .eq("subject_id", payload.subject_id)
-    .eq("topic_parent_name", payload.topic_parent_name); // Check for uniqueness
+    .eq("subject_id", data.subject_id)
+    .eq("topic_parent_name", data.topic_parent_name); // Check for uniqueness
 
   if (existingTopicError) throw existingTopicError;
 
@@ -48,19 +52,22 @@ const addTopicH1 = async (supabase: SupabaseClient, payload: any) => {
   };
 }
 
-const addTopicH2 = async (supabase: SupabaseClient, payload: any) => {
+const addTopicH2 = async (supabase: SupabaseClient, data: any) => {
   // Add additional fields to the payload
-  payload.meta_data = null; // Include meta_data as an empty object
-  payload.created_at = new Date(); // Set created_at to the current date
-  payload.updated_at = new Date(); // Set updated_at to the current date
+  const payload = {
+    ...data,
+    meta_data: null,
+    created_at: new Date(),
+    updated_at: new Date()
+  }
 
   // Validate if the combination of topic_h1_id, subject_id, and topic_h2_name already exists
   const { data: existingTopics, error: existingTopicError } = await supabase
     .from("topic_h2")
     .select("*")
-    .eq("topic_h1_id", payload.topic_h1_id)
-    .eq("subject_id", payload.subject_id)
-    .eq("topic_h2_name", payload.topic_h2_name); // Check for uniqueness
+    .eq("topic_h1_id", data.topic_h1_id)
+    .eq("subject_id", data.subject_id)
+    .eq("topic_h2_name", data.topic_h2_name); // Check for uniqueness
 
   if (existingTopicError) throw existingTopicError;
 
@@ -79,19 +86,22 @@ const addTopicH2 = async (supabase: SupabaseClient, payload: any) => {
   };
 }
 
-const addTopicH3 = async (supabase: SupabaseClient, payload: any) => {
+const addTopicH3 = async (supabase: SupabaseClient, data: any) => {
   // Add additional fields to the payload
-  payload.meta_data = null; // Include meta_data as an empty object
-  payload.created_at = new Date(); // Set created_at to the current date
-  payload.updated_at = new Date(); // Set updated_at to the current date
+  const payload = {
+    ...data,
+    meta_data: null,
+    created_at: new Date(),
+    updated_at: new Date()
+  }
 
   // Validate if the combination of topic_h2_id, subject_id, and topic_h3_name already exists
   const { data: existingTopics, error: existingTopicError } = await supabase
     .from("topic_h3")
     .select("*")
-    .eq("topic_h2_id", payload.topic_h2_id)
-    .eq("subject_id", payload.subject_id)
-    .eq("topic_h3_name", payload.topic_h3_name); // Check for uniqueness
+    .eq("topic_h2_id", data.topic_h2_id)
+    .eq("subject_id", data.subject_id)
+    .eq("topic_h3_name", data.topic_h3_name); // Check for uniqueness
 
   if (existingTopicError) throw existingTopicError;
 
