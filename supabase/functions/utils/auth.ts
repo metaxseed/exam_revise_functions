@@ -40,8 +40,8 @@ export async function verifyJWT(req: Request): Promise<JWTPayload> {
     }
 
     const { payload } = await jose.jwtVerify(token, secretKeyUint8, {
-      issuer: "https://cqfjxolodeqrlvaifybm.supabase.co",  // Change this to match your Supabase project
-      audience: "https://cqfjxolodeqrlvaifybm.supabase.co/auth/v1", // Change this to match your Supabase project
+      issuer: "https://bsmlzmutyifbnahapupl.supabase.co",  // Change this to match your Supabase project
+      audience: "https://bsmlzmutyifbnahapupl.supabase.co/auth/v1", // Change this to match your Supabase project
     });
 
     return payload as JWTPayload;
@@ -61,8 +61,8 @@ export async function createJWT(payload: Partial<JWTPayload>): Promise<string> {
   const jwt = await new jose.SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setIssuer('https://cqfjxolodeqrlvaifybm.supabase.co')
-    .setAudience('https://cqfjxolodeqrlvaifybm.supabase.co/auth/v1')
+    .setIssuer('https://bsmlzmutyifbnahapupl.supabase.co')
+    .setAudience('https://bsmlzmutyifbnahapupl.supabase.co/auth/v1')
     .setExpirationTime('2h')
     .sign(secretKeyUint8);
   
