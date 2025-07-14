@@ -125,6 +125,71 @@ export function createHonoFunction(
     }
   })
 
+  // Support OPTIONS requests for CORS
+  app.options('/*', async (c) => {
+    try {
+      const supabase = c.get('supabase') as SupabaseClient
+      const env = c.get('env') as { SUPABASE_URL: string; SUPABASE_ANON_KEY: string }
+      
+      const context: HandlerContext = {
+        c: c as HonoContext,
+        supabase,
+        env
+      }
+
+      return await handler(context)
+    } catch (error) {
+      console.error('Handler error:', error)
+      return c.json({ 
+        success: false,
+        error: `Function error: ${error.message}` 
+      }, 500)
+    }
+  })
+
+  // Support other HTTP methods like PUT, DELETE, etc.
+  app.put('/*', async (c) => {
+    try {
+      const supabase = c.get('supabase') as SupabaseClient
+      const env = c.get('env') as { SUPABASE_URL: string; SUPABASE_ANON_KEY: string }
+      
+      const context: HandlerContext = {
+        c: c as HonoContext,
+        supabase,
+        env
+      }
+
+      return await handler(context)
+    } catch (error) {
+      console.error('Handler error:', error)
+      return c.json({ 
+        success: false,
+        error: `Function error: ${error.message}` 
+      }, 500)
+    }
+  })
+
+  app.delete('/*', async (c) => {
+    try {
+      const supabase = c.get('supabase') as SupabaseClient
+      const env = c.get('env') as { SUPABASE_URL: string; SUPABASE_ANON_KEY: string }
+      
+      const context: HandlerContext = {
+        c: c as HonoContext,
+        supabase,
+        env
+      }
+
+      return await handler(context)
+    } catch (error) {
+      console.error('Handler error:', error)
+      return c.json({ 
+        success: false,
+        error: `Function error: ${error.message}` 
+      }, 500)
+    }
+  })
+
   // 404 Handler
   app.notFound((c) => {
     return c.json({ 

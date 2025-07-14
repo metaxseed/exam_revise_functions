@@ -1,0 +1,16 @@
+{
+  "imports": {
+    "https://deno.land/x/hono@v3.11.8/mod.ts": "https://deno.land/x/hono@v3.11.8/mod.ts",
+    "https://deno.land/x/hono@v3.11.8/middleware.ts": "https://deno.land/x/hono@v3.11.8/middleware.ts",
+    "https://deno.land/x/jose@v4.13.0/index.ts": "https://deno.land/x/jose@v4.13.0/index.ts",
+    "https://deno.land/x/bcrypt@v0.4.1/mod.ts": "https://deno.land/x/bcrypt@v0.4.1/mod.ts"
+  },
+  "compilerOptions": {
+    "allowJs": true,
+    "lib": [
+      "deno.window",
+      "dom"
+    ],
+    "strict": true
+  }
+}
