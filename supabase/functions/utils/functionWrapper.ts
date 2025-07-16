@@ -81,6 +81,96 @@ export function createHonoFunction(
     await next()
   })
 
+  // API Call Logging Middleware (after Supabase client is set up)
+  app.use('*', async (c, next) => {
+    const startTime = Date.now()
+    
+    // Extract request info
+    const method = c.req.method
+    const url = new URL(c.req.url)
+    const endpoint = url.pathname
+    const userAgent = c.req.header('user-agent') || 'Unknown'
+    const forwardedFor = c.req.header('x-forwarded-for')
+    const realIp = c.req.header('x-real-ip')
+    const ipAddress = forwardedFor?.split(',')[0]?.trim() || realIp || 'Unknown'
+    
+    // Get function name from URL path
+    // URL format: /functions/v1/[function-name]/[sub-path]
+    const pathParts = endpoint.split('/')
+    let functionName = 'unknown'
+    if (pathParts.length >= 4 && pathParts[1] === 'functions' && pathParts[2] === 'v1') {
+      functionName = pathParts[3] // Extract function name
+    } else {
+      // For direct calls like /boards, /themes, etc, use the first path segment
+      functionName = pathParts[1] || 'unknown'
+    }
+    
+    // Get user ID from Authorization header if present
+    let userId: string | null = null
+    try {
+      const supabase = c.get('supabase') as SupabaseClient
+      const authHeader = c.req.header('authorization')
+      if (authHeader && supabase) {
+        const token = authHeader.replace('Bearer ', '')
+        const { data: { user } } = await supabase.auth.getUser(token)
+        userId = user?.id || null
+      }
+    } catch (error) {
+      // Continue without user ID if auth fails
+      console.log('Could not extract user ID:', error.message)
+    }
+
+    // Continue to handler
+    await next()
+
+    // Calculate response time
+    const responseTime = Date.now() - startTime
+    
+    // Get response info from headers
+    const response = c.res
+    const statusCode = response.status || 200
+    const contentLength = response.headers.get('content-length')
+    const responseSize = contentLength ? parseInt(contentLength) : 0
+
+    // Log API call to database (fire and forget)
+    const env = c.get('env') as { SUPABASE_URL: string; SUPABASE_ANON_KEY: string }
+    if (env && method !== 'OPTIONS') { // Skip OPTIONS requests
+      try {
+        // Create service role client for logging (has permission to insert logs)
+        const serviceKey = Deno.env.get('_SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+        if (serviceKey) {
+          const serviceClient = createClient(env.SUPABASE_URL, serviceKey)
+          
+          serviceClient
+            .from('api_call_logs')
+            .insert({
+              function_name: functionName,
+              endpoint: endpoint,
+              method: method,
+              status_code: statusCode,
+              response_time_ms: responseTime,
+              user_id: userId,
+              ip_address: ipAddress,
+              user_agent: userAgent,
+              request_size: 0, // Could calculate from req.body if needed
+              response_size: responseSize,
+              error_message: statusCode >= 400 ? `HTTP ${statusCode}` : null
+            })
+            .then(() => {
+              console.log(`✅ Logged API call: ${method} ${endpoint} - ${statusCode} (${responseTime}ms)`)
+            })
+            .catch((error) => {
+              console.error('❌ Failed to log API call:', error.message)
+            })
+        } else {
+          console.log('⚠️ Service role key not found, skipping API call logging')
+        }
+      } catch (error) {
+        console.error('❌ Error setting up API call logging:', error.message)
+      }
+    }
+  })
+
   // Main handler route (catches all paths)
   app.get('/*', async (c) => {
     try {
