@@ -22,11 +22,36 @@ async function handleBoards(ctx: HandlerContext) {
       return c.json(errorResponse('Method not allowed'), 405)
     }
 
-    // Get exam_short_name from query parameters
+    // Get query parameters
     const url = new URL(c.req.url)
     const exam_short_name = url.searchParams.get('exam_short_name')
+    const board_short_name = url.searchParams.get('board_short_name')
 
     let query = supabase.from('board').select('*')
+
+    // If board_short_name is provided, find specific board by name (for subject ID lookup)
+    if (board_short_name) {
+      console.log('🔍 Finding board by board_short_name:', board_short_name)
+      const { data: boardData, error: boardError } = await supabase
+        .from('board')
+        .select('board_id, board_short_name, board_long_name')
+        .ilike('board_short_name', board_short_name)
+        .maybeSingle()
+
+      if (boardError) {
+        console.error('Board query error:', boardError)
+        const dbError = handleDatabaseError(boardError)
+        return c.json(dbError, 500)
+      }
+
+      if (!boardData?.board_id) {
+        console.error('Board not found for:', board_short_name)
+        return c.json(errorResponse('Board not found'), 404)
+      }
+
+      console.log("✅ Board found:", boardData)
+      return c.json(successResponse([boardData], "Board retrieved successfully"))
+    }
 
     // If exam_short_name is provided, filter boards by those used in the exam
     if (exam_short_name) {

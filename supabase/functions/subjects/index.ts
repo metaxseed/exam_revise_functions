@@ -26,8 +26,54 @@ async function handleSubjects(ctx: HandlerContext) {
     const url = new URL(c.req.url)
     const exam_short_name = url.searchParams.get('exam_short_name')
     const board_id = url.searchParams.get('board_id')
+    const subject_name = url.searchParams.get('subject_name')
+    const exam_id = url.searchParams.get('exam_id')
 
+    // Debug: Log all parameters
+    console.log('🔍 Subjects endpoint - All parameters:', {
+      exam_short_name,
+      board_id,
+      subject_name,
+      exam_id,
+      url: c.req.url
+    })
+
+    // If subject_name, board_id, and exam_id are provided, find specific subject (for subject ID lookup)
+    if (subject_name && board_id && exam_id) {
+      console.log('🎯 Taking specific subject lookup path:', { subject_name, board_id, exam_id })
+      
+      const { data: subjectData, error: subjectError } = await supabase
+        .from('subject')
+        .select('subject_id, subject_name, board_id, exam_id')
+        .ilike('subject_name', subject_name)
+        .eq('board_id', parseInt(board_id))
+        .eq('exam_id', parseInt(exam_id))
+        .maybeSingle()
+
+      if (subjectError) {
+        console.error('Subject query error:', subjectError)
+        const dbError = handleDatabaseError(subjectError)
+        return c.json(dbError, 500)
+      }
+
+      if (!subjectData?.subject_id) {
+        console.error('Subject not found for:', { subject_name, board_id, exam_id })
+        return c.json(errorResponse('Subject not found'), 404)
+      }
+
+      console.log("✅ Subject found:", subjectData)
+      return c.json(successResponse([subjectData], "Subject retrieved successfully"))
+    }
+
+    console.log('🔄 Taking general subjects lookup path, checking exam_short_name requirement')
+    
     if (!exam_short_name) {
+      console.error('❌ exam_short_name is required for general lookup. Parameters received:', {
+        exam_short_name,
+        board_id,
+        subject_name,
+        exam_id
+      })
       return c.json(errorResponse('exam_short_name is required'), 400)
     }
 
@@ -64,7 +110,7 @@ async function handleSubjects(ctx: HandlerContext) {
     }
 
     console.log('Found exam:', examsData[0])
-    const exam_id = examsData[0].exam_id
+    const exam_id_from_name = examsData[0].exam_id
 
     // Build the query for subjects
     let query = supabase
@@ -73,14 +119,11 @@ async function handleSubjects(ctx: HandlerContext) {
         *,
         board:board_id (board_short_name)
       `)
-      .eq('exam_id', exam_id)
+      .eq('exam_id', exam_id_from_name)
 
     // If board_id is provided, filter by it (subjects-by-board.ts logic)
     if (board_id) {
-      if (!board_id) {
-        return c.json(errorResponse('board_id is required when filtering by board'), 400)
-      }
-      query = query.eq('board_id', board_id)
+      query = query.eq('board_id', parseInt(board_id))
     }
 
     const { data, error } = await query

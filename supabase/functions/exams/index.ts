@@ -30,7 +30,48 @@ async function handleExams(ctx: HandlerContext) {
       return c.json(errorResponse('Method not allowed'), 405)
     }
 
-    // Fetch exams with board information
+    // Get query parameters
+    const url = new URL(c.req.url)
+    const exam_short_name = url.searchParams.get('exam_short_name')
+    const board_id = url.searchParams.get('board_id')
+
+    // If both exam_short_name and board_id are provided, find specific exam (for subject ID lookup)
+    if (exam_short_name && board_id) {
+      console.log('🔍 Finding exam by exam_short_name and board_id:', { exam_short_name, board_id })
+      
+      const { data: examData, error: examError } = await supabase
+        .from('exam')
+        .select('exam_id, exam_short_name, exam_long_name')
+        .ilike('exam_short_name', exam_short_name)
+        .eq('board_id', parseInt(board_id))
+        .maybeSingle()
+
+      if (examError) {
+        console.error('Exam query error:', examError)
+        const dbError = handleDatabaseError(examError)
+        return c.json(dbError, 500)
+      }
+
+      if (!examData?.exam_id) {
+        console.error('Exam not found for:', { exam_short_name, board_id })
+        return c.json(errorResponse('Exam not found'), 404)
+      }
+
+      console.log("✅ Exam found:", examData)
+      
+      // Return exam data in the same format as the general query
+      const transformedData: ExamResponse = {
+        exam_id: examData.exam_id,
+        exam_short_name: examData.exam_short_name,
+        exam_long_name: examData.exam_long_name,
+        board_short_name: 'Unknown', // We don't need this for subject lookup
+        board_long_name: 'Unknown Board'
+      }
+
+      return c.json(successResponse([transformedData], "Exam retrieved successfully"))
+    }
+
+    // Fetch exams with board information (general query)
     const { data, error } = await supabase
       .from('exam')
       .select(`
